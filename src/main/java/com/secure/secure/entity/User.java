@@ -11,12 +11,10 @@ public class User {
 
     @Id
     private String id;
-    private String firstName;
-    private String lastName;
+    private String fullName;
     private String username;
     private String email;
     private String password;
-    private String Gender;
 //    private Binary profilePhoto;
     private Long uploadLimit;
 

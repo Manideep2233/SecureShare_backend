@@ -14,7 +14,7 @@ public class Post {
     @Id
     private String id;
     private String message;
-    private byte[] fileData;
+    private Binary fileData;
     private Long fileSize;
     private String fileName;
     private String contentType;

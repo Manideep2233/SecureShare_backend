@@ -21,4 +21,18 @@ public class Output {
             Date postedTime,
             List<Comment> comments){
     }
+
+    public record Login(
+            String userId,
+            String role,
+            String jwt){
+    }
+
+    public record JoinRequest(
+            String reqId,
+            String groupName,
+            String username,
+            String groupId,
+            String userId){
+    }
 }

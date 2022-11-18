@@ -18,6 +18,8 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,15 +44,29 @@ public class PostController implements ResponseMapper {
     @Autowired
     public PostRepository postRepository;
 
-    @PostMapping("/add")
-    public ResponseObject createPost(@RequestBody Input.Post input, @RequestParam MultipartFile file) throws IOException {
-        //todo something is pending
-        var user = userRepository.findById(input.userId());
-        var group = groupRepository.findById(input.groupId());
+    public String getUsername(){
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        String username ="";
+        if (principal instanceof UserDetails) {
+            username = ((UserDetails)principal).getUsername();
+        } else {
+            username = principal.toString();
+        }
+        return username;
+    }
+
+    @PostMapping("/add/{groupId}/{message}")
+    public ResponseObject createPost(@PathVariable(name ="message") String message,
+                                     @PathVariable(name ="groupId") String groupId,
+            //@RequestParam(name = "groupId") String groupId, @RequestParam String message,
+            @RequestParam MultipartFile file) throws IOException {
+        var user = userRepository.findByUsername(getUsername());
+        var group = groupRepository.findById(groupId);
         Post post = new Post();
-        post.setMessage(input.message());
+        post.setMessage(message);
         if(file!=null && !file.isEmpty()){
-            post.setFileData(file.getBytes());
+            post.setFileData(new Binary(BsonBinarySubType.BINARY, file.getBytes()));
             post.setFileName(file.getOriginalFilename());
             post.setFileSize(file.getSize());
             post.setContentType(file.getContentType());
@@ -67,7 +83,9 @@ public class PostController implements ResponseMapper {
         List<Comment> comments = new ArrayList<>();
         post.setComments(comments);
         var saved = postRepository.save(post);
-        return successResponse("Added post: " + saved.getId());
+        return successResponse("Added post: " + saved.getId() + " "+ post.getFileSize() );
+
+        //todo uploaded size increase in group and user entity and validate also
     }
 
     @DeleteMapping("/delete/{id}")
@@ -76,11 +94,12 @@ public class PostController implements ResponseMapper {
         if(!post.isPresent()){
             return errorResponse(new CustomException("Post not found"));
         }
+        //todo uploaded size increase in group and user entity
         postRepository.delete(post.get());
         return successResponse("Deleted post");
     }
 
-    @DeleteMapping("/delete-user/{userId}")
+  /*  @DeleteMapping("/delete-user/{userId}")
     public ResponseObject deleteUserPosts(@PathVariable(name ="userId") String userId){
         var posts = postRepository.getAllUserPosts(userId);
         if(posts==null || posts.isEmpty()){
@@ -88,8 +107,8 @@ public class PostController implements ResponseMapper {
         }
         postRepository.deleteAll(posts);
         return successResponse("Deleted user posts...");
-    }
-
+    }*/
+/*
     @DeleteMapping("/delete-group/{groupId}")
     public ResponseObject deleteGroupPosts(@PathVariable(name ="groupId") String groupId){
         var posts = postRepository.getAllGroupPosts(groupId);
@@ -98,7 +117,7 @@ public class PostController implements ResponseMapper {
         }
         postRepository.deleteAll(posts);
         return successResponse("Deleted Group posts...");
-    }
+    }*/
 
     @PutMapping("/add-comment")
     public ResponseObject addComment(@RequestBody Input.Comment input){
@@ -115,9 +134,9 @@ public class PostController implements ResponseMapper {
         return successResponse("Added post...");
     }
     
-    @GetMapping("/user/{userId}")
-    public ResponseObject getAllUserPosts(@PathVariable(name ="userId") String userId){
-        var posts = postRepository.getAllUserPosts(userId);
+    @GetMapping("/user")
+    public ResponseObject getAllUserPosts(){
+        var posts = postRepository.getAllUserPosts1(getUsername());
         if(posts==null || posts.isEmpty()){
             return errorResponse(new CustomException("Posts not found"));
         }
@@ -130,10 +149,13 @@ public class PostController implements ResponseMapper {
 
     @GetMapping("/user/{groupId}")
     public ResponseObject getAllGroupPosts(@PathVariable(name ="groupId") String groupId){
-        var posts = postRepository.getAllGroupPosts(groupId);
-        if(posts==null || posts.isEmpty()){
-            return errorResponse(new CustomException("Posts not found"));
+        var group = groupRepository.findById(groupId);
+        var user = userRepository.findByUsername(getUsername());
+        if(!user.get().getUsername().equals("defaultAdmin") ||
+                !group.get().getCreatedBy().equals(getUsername())){
+            return errorResponse(new CustomException("Not Authorized"));
         }
+        var posts = postRepository.getAllGroupPosts(groupId);
         return successResponse(
                 posts.stream().map(x->new Output.postList(x.getId(),x.getMessage(),
                         x.getFileName(),x.getFileSize(),x.getCreator().getUsername(),
@@ -148,6 +170,6 @@ public class PostController implements ResponseMapper {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(post.getContentType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + post.getFileName() + "\"")
-                .body(new ByteArrayResource(post.getFileData()));
+                .body(new ByteArrayResource(post.getFileData().getData()));
     }
 }
