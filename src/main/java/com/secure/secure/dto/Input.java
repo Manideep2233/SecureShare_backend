@@ -6,13 +6,11 @@ import org.springframework.lang.NonNull;
 
 public class Input {
     public record Register(
-            String firstName,
-            String lastName,
+            String fullName,
             String email,
             String username,
             String password,
-            String confirmPassword,
-            String Gender) {
+            String confirmPassword) {
     }
 
     public record Login(
@@ -20,25 +18,16 @@ public class Input {
             String password){
     }
 
-    public  record  UpdateLimit(
-            String userId,
-            Long limit){
-    }
-
     public record UpdateUser(
             String userId,
-            String firstName,
-            String lastName,
+            String fullName,
             String email,
-            String username,
-            String password,
-            String Gender) {
+            String username) {
     }
 
     public record CreateGroup(
             String groupName,
-            String groupDescription,
-            String createdBy) {
+            String groupDescription) {
     }
 
     public record GroupDescription(
@@ -53,13 +42,21 @@ public class Input {
 
     public record Post(
             String groupId,
-            String userId,
             String message){
     }
 
     public record Comment(
             String postId,
-            String message,
-            String commentedBy){
+            String message){
+    }
+
+    public record GroupRequest(
+      String groupId){
+    }
+
+
+    public record UploadRequest(
+            String id,
+            long updateSize){
     }
 }

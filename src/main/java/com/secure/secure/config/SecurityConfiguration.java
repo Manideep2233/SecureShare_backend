@@ -11,6 +11,15 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -36,9 +45,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().disable()
+        http.csrf().disable().cors().and()
                 .authorizeRequests()
-                .antMatchers("/user/login","/swagger-ui/**","/v3/api-docs/**")
+                .antMatchers("/user/register","/user/validate-login","/user/login","/swagger-ui/**","/v3/api-docs/**","*/api-docs.yaml")
                 .permitAll()
                 .anyRequest()
                 .authenticated()
@@ -48,4 +57,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         ;
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
     }
+
 }
+

@@ -18,4 +18,5 @@ public class Group {
     private String createdBy;
     private List<User> groupMembers;
     private Long uploadLimit;
+    private Long totalUploadedSize;
 }

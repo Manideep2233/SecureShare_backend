@@ -21,4 +21,48 @@ public class Output {
             Date postedTime,
             List<Comment> comments){
     }
+
+    public record Login(
+            String userId,
+            String role,
+            String jwt){
+    }
+
+    public record JoinRequest(
+            String reqId,
+            String groupName,
+            String username,
+            String groupId,
+            String userId){
+    }
+    public record MyProfile(
+            String id,
+            String fullName,
+            String email,
+            String username){
+    }
+
+    public record UsersList(
+            String id,
+            String username,
+            String fullname,
+            String utilized,
+            String total){
+    }
+
+
+    public record GroupsListAll(
+            String id,
+            String name,
+            String description,
+            String utilized,
+            String total){
+    }
+
+    public record ExploreList(
+            String id,
+            String name,
+            String description,
+            boolean isRequested){
+    }
 }

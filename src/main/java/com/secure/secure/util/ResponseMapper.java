@@ -5,7 +5,7 @@ public interface ResponseMapper {
     default ResponseObject errorResponse(CustomException ce){
         var response = new ResponseObject();
         response.setStatus("ERROR");
-        response.setResponse(null);
+        response.setResponse(ce.getMessage());
         return response;
     }
 
