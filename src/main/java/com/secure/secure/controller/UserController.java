@@ -209,7 +209,7 @@ public class UserController implements ResponseMapper {
         user.setUsername(input.username());
         user.setEmail(input.email());
         user.setPassword(passwordEncoder.encode(input.password()));
-        user.setUploadLimit(51200000L); //50 MB
+        user.setUploadLimit(50*1024*1000L); //50 MB
         var saved = userRepository.save(user);
 //        var res = login(new Input.Login(saved.getUsername(),input.password()));
 //        return successResponse(res.getResponse());
@@ -296,7 +296,7 @@ public class UserController implements ResponseMapper {
         if(!user.isPresent()){
             return errorResponse(new CustomException("User is Not Found"));
         }
-        if(user.get().getUploadLimit()< input.updateSize()*1024*1000){
+        if(user.get().getUploadLimit()> input.updateSize()*1024*1000){
             return errorResponse(new CustomException("Updating limit is lessthan current limit"));
         }
         if(input.updateSize()*1024*1000 > 100*1024*1000){

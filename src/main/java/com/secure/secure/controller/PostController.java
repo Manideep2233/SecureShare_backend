@@ -166,7 +166,7 @@ public class PostController implements ResponseMapper {
         comment.setCommentedTime(new Date());
         post.get().getComments().add(comment);
         postRepository.save(post.get());
-        return successResponse("Added post...");
+        return successResponse("Added Comment...");
 }
     
     @GetMapping("/user")

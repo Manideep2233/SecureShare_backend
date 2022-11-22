@@ -77,7 +77,7 @@ public class GroupController implements ResponseMapper {
             group.setCreatedBy(user.get().getUsername());
             group.setCreatedTime(new Date());
             group.setGroupMembers(List.of(user.get()));
-            group.setUploadLimit(307200000L); //300 MB
+            group.setUploadLimit(300*1024*1000L); //300 MB
             group.setTotalUploadedSize(0L);
             var saved = groupRepository.save(group);
             return successResponse("Created Group: "+ saved.getGroupName());
@@ -137,7 +137,7 @@ public class GroupController implements ResponseMapper {
         if(!group.isPresent()){
             return errorResponse(new CustomException("Group not Found"));
         }
-        if(group.get().getUploadLimit()< input.updateSize()*1024*1000){
+        if(group.get().getUploadLimit() > input.updateSize()*1024*1000){
             return errorResponse(new CustomException("Updating limit is lessthan current limit"));
         }
         if(input.updateSize()*1024*1000 > 500*1024*1000){
