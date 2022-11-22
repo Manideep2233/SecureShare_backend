@@ -14,8 +14,12 @@ import com.secure.secure.repository.UserRepository;
 import com.secure.secure.util.CustomException;
 import com.secure.secure.util.ResponseMapper;
 import com.secure.secure.util.ResponseObject;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,8 +29,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -36,6 +42,8 @@ import java.util.regex.Pattern;
 @RequestMapping("/user")
 public class UserController implements ResponseMapper {
 
+    @Value("${jwt.secret}")
+    private String secretKey;
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -425,6 +433,22 @@ public class UserController implements ResponseMapper {
         }
 
         return successResponse("Validated");
+    }
+
+    @GetMapping("/logout")
+    public String logout(HttpServletRequest request){
+
+        String authorization = request.getHeader("Authorization");
+        if(null!=authorization){
+            authorization = authorization.substring(7,authorization.length());
+        }
+        final Date createdDate = new Date();
+
+        final Claims claims = jwtUtility.getAllClaimsFromToken(authorization);
+        claims.setIssuedAt(createdDate);
+        claims.setExpiration(new Date(createdDate.getTime() + 1 * 1000l));
+
+        return Jwts.builder().setClaims(claims).signWith(SignatureAlgorithm.HS512, secretKey).compact();
     }
 
 }
