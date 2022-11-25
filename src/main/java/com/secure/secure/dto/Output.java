@@ -2,7 +2,6 @@ package com.secure.secure.dto;
 
 import com.secure.secure.entity.Comment;
 
-import java.util.Date;
 import java.util.List;
 
 public class Output {
@@ -18,7 +17,7 @@ public class Output {
             String fileName,
             Long fileSize,
             String createdBy,
-            Date postedTime,
+            String postedTime,
             List<Comment> comments){
     }
 
@@ -64,5 +63,15 @@ public class Output {
             String name,
             String description,
             boolean isRequested){
+    }
+
+    public record myGroups(
+            String groupId,
+            String groupName,
+            List<Output.Users> users
+    ){}
+    public record Users(
+            String userid,
+            String username){
     }
 }

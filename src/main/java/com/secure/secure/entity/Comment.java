@@ -8,5 +8,5 @@ import java.util.Date;
 public class Comment {
     private String message;
     private String commentedBy;
-    private Date commentedTime;
+    private String commentedTime;
 }

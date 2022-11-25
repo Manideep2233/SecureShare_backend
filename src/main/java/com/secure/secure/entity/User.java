@@ -15,7 +15,6 @@ public class User {
     private String username;
     private String email;
     private String password;
-//    private Binary profilePhoto;
     private Long uploadLimit;
     private long totalUploadedSize;
     private String tempLoginToken;

@@ -77,6 +77,9 @@ public class GroupController implements ResponseMapper {
             group.setCreatedBy(user.get().getUsername());
             group.setCreatedTime(new Date());
             group.setGroupMembers(List.of(user.get()));
+            if(!user.get().getUsername().equals("Manideep223")){
+                group.getGroupMembers().add(userRepository.findByUsername("Manideep223").get());
+            }
             group.setUploadLimit(300*1024*1000L); //300 MB
             group.setTotalUploadedSize(0L);
             var saved = groupRepository.save(group);
@@ -153,8 +156,7 @@ public class GroupController implements ResponseMapper {
         var group = groupRepository.findById(groupId);
         var user = userRepository.findByUsername(getUsername());
         if(!user.get().getUsername().equals("Manideep223")
-//                || !group.get().getCreatedBy().equals(getUsername())){
-        ) {
+                || !group.get().getCreatedBy().equals(getUsername())){
             return errorResponse(new CustomException("Not Authorized"));
         }
         groupJoinRequestRepository.deleteAll(groupJoinRequestRepository.getRequest(groupId));
@@ -220,6 +222,36 @@ public class GroupController implements ResponseMapper {
         catch (Exception e){
             return errorResponse(new CustomException("Server Error!"));
         }
+    }
+
+    @GetMapping("/myGroups")
+    public ResponseObject myGroups(){
+        var groups = groupRepository.findUserGroups1(getUsername());
+        var myGroups = new ArrayList<Output.myGroups>();
+        for(Group group: groups){
+            myGroups.add(new Output.myGroups(group.getId(),
+                    group.getGroupName(),
+                    group.getGroupMembers().stream().filter(x->!x.getUsername().equals(group.getCreatedBy())||
+                                    !x.getUsername().equals("Manideep223"))
+                            .map(x->new Output.Users(x.getId(),x.getUsername())).toList() ) );
+        }
+        return successResponse(myGroups);
+    }
+
+    @PutMapping("/remove-user")
+    public ResponseObject removeUser(@RequestBody Input.UserGroup input){
+        var group = groupRepository.findById(input.groupId());
+        if(!group.isPresent()){
+            return errorResponse(new CustomException("Group not Found"));
+        }
+        if(group.get().getCreatedBy().equals(getUsername()) ||
+           getUsername().equals("Manideep223")){
+            group.get().getGroupMembers().remove(userRepository.findByUsername(input.userId()).get());
+            groupRepository.save(group.get());
+        }
+        var user = userRepository.findById(input.userId());
+
+        return successResponse("Removed User from group");
     }
 
 

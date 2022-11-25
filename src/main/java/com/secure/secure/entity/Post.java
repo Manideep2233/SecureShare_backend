@@ -20,7 +20,7 @@ public class Post {
     private String contentType;
     private User creator;
     private Group group;
-    private Date postedTime;
+    private String postedTime;
     private List<Comment> comments;
 
 

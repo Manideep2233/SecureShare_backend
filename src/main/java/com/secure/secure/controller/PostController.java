@@ -96,7 +96,7 @@ public class PostController implements ResponseMapper {
         group.get().setTotalUploadedSize(group.get().getTotalUploadedSize()+ file.getSize());
         post.setCreator(user.get());
         post.setGroup(group.get());
-        post.setPostedTime(new Date());
+        post.setPostedTime((new Date()).toString());
         List<Comment> comments = new ArrayList<>();
         post.setComments(comments);
         var saved = postRepository.save(post);
@@ -163,7 +163,7 @@ public class PostController implements ResponseMapper {
         Comment comment = new Comment();
         comment.setMessage(input.message());
         comment.setCommentedBy(user.get().getUsername());
-        comment.setCommentedTime(new Date());
+        comment.setCommentedTime(new Date().toString());
         post.get().getComments().add(comment);
         postRepository.save(post.get());
         return successResponse("Added Comment...");
