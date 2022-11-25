@@ -318,13 +318,13 @@ public class UserController implements ResponseMapper {
 
         //todo default admin creation is pending
 
-    public void addAdmin(){
+    public void addAdmin(String password){
         if(!userRepository.findByUsername("Manideep223").isPresent()){
             var user = new User();
             user.setFullName("Manideep Shanigaram");
             user.setEmail("shanigarammanideep223@gmail.com");
             user.setUsername("Manideep223");
-            user.setPassword(passwordEncoder.encode("Manideep@223"));
+            user.setPassword(passwordEncoder.encode(password));
             user.setUploadLimit(500000L);
             user.setTotalUploadedSize(0L);
             userRepository.save(user);

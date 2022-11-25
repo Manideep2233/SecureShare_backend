@@ -25,6 +25,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @SpringBootApplication
 public class SecureShareApplication {
 
+	@Value("${spring.defaultadmin.password}")
+	private String defaultAdminPassword;
 	@Autowired
 	private UserController userController;
 
@@ -39,7 +41,7 @@ public class SecureShareApplication {
 
 	@EventListener(ApplicationReadyEvent.class)
 	public void onStartUp(){
-		userController.addAdmin();
+		userController.addAdmin(defaultAdminPassword);
 	}
 
 
