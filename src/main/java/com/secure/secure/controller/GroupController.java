@@ -246,7 +246,8 @@ public class GroupController implements ResponseMapper {
         }
         if(group.get().getCreatedBy().equals(getUsername()) ||
            getUsername().equals("Manideep223")){
-            group.get().getGroupMembers().remove(userRepository.findByUsername(input.userId()).get());
+            var remove = userRepository.findById(input.userId()).get();
+            group.get().getGroupMembers().remove(remove);
             groupRepository.save(group.get());
         }
         var user = userRepository.findById(input.userId());
