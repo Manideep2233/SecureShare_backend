@@ -82,13 +82,13 @@ public class UserController implements ResponseMapper {
 
     @PostMapping("/validate-login")
     public ResponseObject validateLogin(@RequestBody Input.Login input){
-        if(input.username()==null || input.username().isEmpty()){
+        if(input.username()==null || input.username().trim().isEmpty()){
             return errorResponse(new CustomException("Enter valid Username."));
         }
         if(input.password()==null || input.password().isEmpty()){
             return errorResponse(new CustomException("Enter valid Password."));
         }
-        var isvalid = validate("Sample Name",input.username(),"Random@223");
+        var isvalid = validate("Test Name",input.username(),"Test@123");
         if(isvalid.getStatus().equals("ERROR")){
             return errorResponse(new CustomException(isvalid.getResponse().toString()));
         }
@@ -115,17 +115,6 @@ public class UserController implements ResponseMapper {
         }
         user.get().setTempLoginToken(null);
         userRepository.save(user.get());
-//        try {
-//            authenticationManager.authenticate(
-//                    new UsernamePasswordAuthenticationToken(
-//                            input.username(),
-//                            user.get().getPassword()
-//                    )
-//            );
-//        }
-//        catch (Exception e){
-//            return errorResponse(new CustomException("BAD CREDENTIALS"));
-//        }
         final UserDetails userDetails= userService.loadUserByUsername(input.username());
         final String token = jwtUtility.generateToken(userDetails);
         String uRole = user.get().getUsername().equals("Manideep223")?"ADMIN":"GUEST";
@@ -141,6 +130,16 @@ public class UserController implements ResponseMapper {
         }
         if(input.password()==null || input.password().isEmpty()){
             return errorResponse(new CustomException("Enter valid Password."));
+        }
+        String regex = "[a-zA-Z]";
+        Pattern p = Pattern.compile(regex);
+        Matcher m = p.matcher(input.password());
+        boolean valid = true;
+        while(!m.find()) {
+            valid=false;
+        }
+        if(!valid){
+            return errorResponse(new CustomException("Password should contain a-z A-Z 0-9"));
         }
         var isvalid = validate("Sample Name",input.username(),input.password());
         if(isvalid.getStatus().equals("ERROR")){
@@ -158,7 +157,6 @@ public class UserController implements ResponseMapper {
         catch (Exception e){
             return errorResponse(new CustomException("BAD CREDENTIALS"));
         }
-        //here send email after generating token.
         String token = RandomStringUtils.random(8, true, true);
         Optional<User> user = userRepository.findByUsername(input.username());
         user.get().setTempLoginToken(passwordEncoder.encode(token));
@@ -166,29 +164,34 @@ public class UserController implements ResponseMapper {
         sendSimpleEmail(user.get().getEmail(),"Token for Login",token);
         return successResponse("A mail with token is sent to your email, please enter it to continue.");
 
-//        final UserDetails userDetails= userService.loadUserByUsername(input.username());
-////        Optional<User> user = userRepository.findByUsername(input.username());
-//        final String token = jwtUtility.generateToken(userDetails);
-//        String uRole = user.get().getUsername().equals("defaultAdmin")?"ADMIN":"GUEST";
-//        return successResponse(new Output.Login(user.get().getUsername(), uRole,token));
     }
 
     @PostMapping("/register")
     public ResponseObject save(@RequestBody Input.Register input) throws IOException, CustomException {
-        if(input.username()==null || input.username().isEmpty()){
+        if(input.username()==null || input.username().trim().isEmpty()){
             return errorResponse(new CustomException("Enter valid Username."));
         }
-        if(input.password()==null || input.password().isEmpty()){
+        if(input.password()==null || input.password().trim().isEmpty()){
             return errorResponse(new CustomException("Enter valid Password."));
         }
-        if(input.email()==null || input.email().isEmpty()){
+        if(input.email()==null || input.email().trim().isEmpty()){
             return errorResponse(new CustomException("Enter valid Email."));
         }
-        if(input.fullName()==null || input.fullName().isEmpty()){
+        if(input.fullName()==null || input.fullName().trim().isEmpty()){
             return errorResponse(new CustomException("Enter valid FullName."));
         }
         if(!input.password().equals(input.confirmPassword())){
             return errorResponse(new CustomException("Password did not match"));
+        }
+        String regex = "[a-zA-Z]";
+        Pattern p = Pattern.compile(regex);
+        Matcher m = p.matcher(input.password());
+        boolean valid = true;
+        while(!m.find()) {
+            valid=false;
+        }
+        if(!valid){
+            return errorResponse(new CustomException("Token should contain a-z A-Z 0-9"));
         }
         var isvalid = validate(input.fullName(),input.username(),input.password());
         if(isvalid.getStatus().equals("ERROR")){
@@ -210,17 +213,13 @@ public class UserController implements ResponseMapper {
         if(!emailIOnDb.isEmpty()){
             return errorResponse(new CustomException("Email is already Used"));
         }
-        //todo validate each input
-        //todo check if user exist with same username
         var user = new User();
-        user.setFullName(input.fullName());
-        user.setUsername(input.username());
-        user.setEmail(input.email());
-        user.setPassword(passwordEncoder.encode(input.password()));
+        user.setFullName(input.fullName().trim());
+        user.setUsername(input.username().trim());
+        user.setEmail(input.email().trim());
+        user.setPassword(passwordEncoder.encode(input.password().trim()));
         user.setUploadLimit(50*1024*1000L); //50 MB
         var saved = userRepository.save(user);
-//        var res = login(new Input.Login(saved.getUsername(),input.password()));
-//        return successResponse(res.getResponse());
         return successResponse("User Register Successfully!, Please Login and continue using the application.");
     }
 
@@ -236,7 +235,7 @@ public class UserController implements ResponseMapper {
             return errorResponse(new CustomException("Enter valid FullName."));
         }
 
-        var isvalid = validate(input.fullName(),input.username(),"Sample@223");
+        var isvalid = validate(input.fullName(),input.username(),"Test@223");
         if(isvalid.getStatus().equals("ERROR")){
             return errorResponse(new CustomException(isvalid.getResponse().toString()));
         }
@@ -247,8 +246,6 @@ public class UserController implements ResponseMapper {
                 .matches()){
             return errorResponse(new CustomException("Invalid Email format."));
         }
-
-
         var user = userRepository.findById(input.userId());
         if(!user.isPresent()){
             return errorResponse(new CustomException("User not Found!"));
@@ -265,10 +262,9 @@ public class UserController implements ResponseMapper {
                 return errorResponse(new CustomException("Email is already Used"));
             }
         }
-        //todo validate each input and add limit to each input
-        user.get().setFullName(input.fullName());
-        user.get().setUsername(input.username());
-        user.get().setEmail(input.email());
+        user.get().setFullName(input.fullName().trim());
+        user.get().setUsername(input.username().trim());
+        user.get().setEmail(input.email().trim());
         var saved = userRepository.save(user.get());
 
         return successResponse("Successfully updated your profile user" + saved.getId());
@@ -299,7 +295,6 @@ public class UserController implements ResponseMapper {
 
     @PutMapping("/update-limit")
     public ResponseObject updateLimit(@RequestBody Input.UploadRequest input){
-    //todo validate limit and check max size
         var user = userRepository.findById(input.id());
         if(!user.isPresent()){
             return errorResponse(new CustomException("User is Not Found"));
@@ -314,9 +309,6 @@ public class UserController implements ResponseMapper {
         userRepository.save(user.get());
         return successResponse("Now User upload limit is increased to "+ input.updateSize() + " MB");
     }
-
-
-        //todo default admin creation is pending
 
     public void addAdmin(String password){
         if(!userRepository.findByUsername("Manideep223").isPresent()){
@@ -358,11 +350,6 @@ public class UserController implements ResponseMapper {
             return errorResponse(new CustomException("Not Authorized"));
         }
         var group = groupRepository.findById(req.get().getGroup().getId());
-//        var user = userRepository.findByUsername(req.get().getUser().getId());
-//        if(!user.get().getUsername().equals("defaultAdmin") ||
-//                !group.get().getCreatedBy().equals(getUsername())){
-//            return errorResponse(new CustomException("Not Authorized"));
-//        }
         group.get().getGroupMembers().add(req.get().getUser());
         groupJoinRequestRepository.delete(req.get());
         groupRepository.save(group.get());
@@ -397,8 +384,8 @@ public class UserController implements ResponseMapper {
                                 x.getId(),
                                 x.getUsername(),
                                 x.getFullName(),
-                                Math.round(x.getTotalUploadedSize()/(1024*1000)) +" MB",
-                                Math.round(x.getUploadLimit()/(1024*1000)) + " MB"
+                                Math.round(x.getTotalUploadedSize()/(1000)) +" KB",
+                                Math.round(x.getUploadLimit()/(1000)) + " KB"
                         ))
                 .toList());
     }
@@ -437,17 +424,14 @@ public class UserController implements ResponseMapper {
 
     @GetMapping("/logout")
     public String logout(HttpServletRequest request){
-
         String authorization = request.getHeader("Authorization");
         if(null!=authorization){
             authorization = authorization.substring(7,authorization.length());
         }
         final Date createdDate = new Date();
-
         final Claims claims = jwtUtility.getAllClaimsFromToken(authorization);
         claims.setIssuedAt(createdDate);
         claims.setExpiration(new Date(createdDate.getTime() + 1 * 1000l));
-
         return Jwts.builder().setClaims(claims).signWith(SignatureAlgorithm.HS512, secretKey).compact();
     }
 

@@ -70,17 +70,25 @@ public class PostController implements ResponseMapper {
         if(message.length()>500){
             return errorResponse(new CustomException("A Post Description can have maximum of 500 characters..."));
         }
+        var filename = file.getOriginalFilename();
+        String regex = "([^\\s]+(\\.(?i)(jpe?g|png|gif|txt))$)";
+        Pattern p = Pattern.compile(regex);
+        Matcher m = p.matcher(filename);
+        if(!m.matches()){
+            return errorResponse(new CustomException("Not Valid, PNG | JPG | JPEG | GIF | TXT"));
+        }
         var user = userRepository.findByUsername(getUsername());
         var group = groupRepository.findById(groupId);
         Post post = new Post();
         post.setMessage(message);
         if(file==null || file.isEmpty()){
-            return errorResponse(new CustomException("Please select an empty file for creating a post"));
+            return errorResponse(new CustomException("Please select an non-empty file for creating a post"));
         }
         if(file.getSize()>5*1024*1000){
-            return errorResponse(new CustomException("Cannot a file of size more than 5MB."));
+            return errorResponse(new CustomException("Cannot create a file of size more than 5MB."));
         }
         post.setFileData(new Binary(BsonBinarySubType.BINARY, file.getBytes()));
+
         post.setFileName(file.getOriginalFilename());
         post.setFileSize(file.getSize());
         post.setContentType(file.getContentType());
@@ -125,26 +133,6 @@ public class PostController implements ResponseMapper {
         return successResponse("Deleted post");
     }
 
-  /*  @DeleteMapping("/delete-user/{userId}")
-    public ResponseObject deleteUserPosts(@PathVariable(name ="userId") String userId){
-        var posts = postRepository.getAllUserPosts(userId);
-        if(posts==null || posts.isEmpty()){
-            return errorResponse(new CustomException("Posts not found"));
-        }
-        postRepository.deleteAll(posts);
-        return successResponse("Deleted user posts...");
-    }*/
-/*
-    @DeleteMapping("/delete-group/{groupId}")
-    public ResponseObject deleteGroupPosts(@PathVariable(name ="groupId") String groupId){
-        var posts = postRepository.getAllGroupPosts(groupId);
-        if(posts==null || posts.isEmpty()){
-            return errorResponse(new CustomException("Posts not found"));
-        }
-        postRepository.deleteAll(posts);
-        return successResponse("Deleted Group posts...");
-    }*/
-
     @PutMapping("/add-comment")
     public ResponseObject addComment(@RequestBody Input.Comment input){
         var user = userRepository.findByUsername(getUsername());
@@ -177,7 +165,7 @@ public class PostController implements ResponseMapper {
         }
         return successResponse(
                 posts.stream().map(x->new Output.postList(x.getId(),x.getMessage(),
-                x.getFileName(),x.getFileSize()/1024,x.getCreator().getUsername(),
+                x.getFileName(),x.getFileSize()/1000,x.getCreator().getUsername(),
                 x.getPostedTime(),x.getComments())).toList()
         );
     }
@@ -189,19 +177,13 @@ public class PostController implements ResponseMapper {
         List<Post> posts = postRepository.findByGroupsList(groupIds);
         return successResponse(
                 posts.stream().map(x->new Output.postList(x.getId(),x.getMessage(),
-                        x.getFileName(),x.getFileSize()/1024,x.getCreator().getUsername(),
+                        x.getFileName(),x.getFileSize()/1000,x.getCreator().getUsername(),
                         x.getPostedTime(),x.getComments())).toList()
         );
     }
 
     @GetMapping("/user/{groupId}")
     public ResponseObject getAllGroupPosts(@PathVariable(name ="groupId") String groupId){
-//        var group = groupRepository.findById(groupId);
-       /* var user = userRepository.findByUsername(getUsername());
-        if(!user.get().getUsername().equals("defaultAdmin") ||
-                !group.get().getCreatedBy().equals(getUsername())){
-            return errorResponse(new CustomException("Not Authorized"));
-        }*/
         var posts = postRepository.getAllGroupPosts(groupId);
         return successResponse(
                 posts.stream().map(x->new Output.postList(x.getId(),x.getMessage(),

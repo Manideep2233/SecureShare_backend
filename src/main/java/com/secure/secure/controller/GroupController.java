@@ -102,40 +102,9 @@ public class GroupController implements ResponseMapper {
         groupRepository.save(group.get());
         return successResponse("Updated Description: "+ group.get().getGroupName());
     }
-/*
-    @PutMapping("/add-user")
-    public ResponseObject addUser(@RequestBody Input.UserGroup input){
-        var group = groupRepository.findById(input.groupId());
-        var user = userRepository.findByUsername(getUsername());
-        if(!user.get().getUsername().equals("defaultAdmin") ||
-                !group.get().getCreatedBy().equals(getUsername())){
-            return errorResponse(new CustomException("Not Authorized"));
-        }
-        group.get().getGroupMembers().add(user.get());
-        //delete from group request`
-
-        groupRepository.save(group.get());
-        return successResponse("Added User to group");
-    }
-
-    @PutMapping("/remove-user")
-    public ResponseObject removeUser(@RequestBody Input.UserGroup input){
-        //todo validate each input and add limit to each input
-        //todo only create should be able to edit
-        var group = groupRepository.findById(input.groupId());
-        if(!group.isPresent()){
-            return errorResponse(new CustomException("Group not Found"));
-        }
-        var user = userRepository.findById(input.userId());
-        group.get().getGroupMembers().remove(user.get());
-        groupRepository.save(group.get());
-        return successResponse("Removed User from group");
-    }*/
 
     @PutMapping("/update-limit")
     public ResponseObject updateLimit(@RequestBody Input.UploadRequest input){
-        //todo validate each input and add limit to each input
-        //todo only create should be able to edit
         var group = groupRepository.findById(input.id());
         if(!group.isPresent()){
             return errorResponse(new CustomException("Group not Found"));
@@ -246,12 +215,20 @@ public class GroupController implements ResponseMapper {
         }
         if(group.get().getCreatedBy().equals(getUsername()) ||
            getUsername().equals("Manideep223")){
-            var remove = userRepository.findById(input.userId()).get();
-            group.get().getGroupMembers().remove(remove);
+            var removeUser = userRepository.findById(input.userId()).get();
+            var currentSize = group.get().getTotalUploadedSize();
+            var posts = postRepository.getAllGroupPosts(group.get().getId());
+            var removeSize = posts.stream()
+                    .filter(x-> x.getCreator().getUsername().equals(removeUser.getUsername()))
+                    .map(x->x.getFileSize()).reduce(0L, (a, b) -> a + b);
+            postRepository.deleteAll(posts);
+            var userCurrentSize = removeUser.getTotalUploadedSize();
+            removeUser.setTotalUploadedSize(userCurrentSize-removeSize);
+            userRepository.save(removeUser);
+            group.get().getGroupMembers().remove(removeUser);
+            group.get().setTotalUploadedSize(currentSize-removeSize);
             groupRepository.save(group.get());
         }
-        var user = userRepository.findById(input.userId());
-
         return successResponse("Removed User from group");
     }
 
