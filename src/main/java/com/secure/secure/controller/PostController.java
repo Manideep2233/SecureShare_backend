@@ -165,7 +165,7 @@ public class PostController implements ResponseMapper {
         }
         return successResponse(
                 posts.stream().map(x->new Output.postList(x.getId(),x.getMessage(),
-                x.getFileName(), (long) Math.ceil(x.getFileSize()/1000),x.getCreator().getUsername(),
+                x.getFileName(), (long) Math.ceil((double)x.getFileSize()/1000),x.getCreator().getUsername(),
                 x.getPostedTime(),x.getComments())).toList()
         );
     }
