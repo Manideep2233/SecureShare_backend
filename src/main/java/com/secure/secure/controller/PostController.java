@@ -177,7 +177,7 @@ public class PostController implements ResponseMapper {
         List<Post> posts = postRepository.findByGroupsList(groupIds);
         return successResponse(
                 posts.stream().map(x->new Output.postList(x.getId(),x.getMessage(),
-                        x.getFileName(),x.getFileSize()/1000,x.getCreator().getUsername(),
+                        x.getFileName(),(long) Math.ceil((double)x.getFileSize()/1000),x.getCreator().getUsername(),
                         x.getPostedTime(),x.getComments())).toList()
         );
     }
@@ -187,7 +187,7 @@ public class PostController implements ResponseMapper {
         var posts = postRepository.getAllGroupPosts(groupId);
         return successResponse(
                 posts.stream().map(x->new Output.postList(x.getId(),x.getMessage(),
-                        x.getFileName(), (long) Math.round(x.getFileSize()/(1024*1000)),x.getCreator().getUsername(),
+                        x.getFileName(), (long) Math.ceil((double)x.getFileSize()/1000),x.getCreator().getUsername(),
                         x.getPostedTime(),x.getComments())).toList()
         );
     }
