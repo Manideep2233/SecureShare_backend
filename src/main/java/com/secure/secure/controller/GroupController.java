@@ -217,9 +217,9 @@ public class GroupController implements ResponseMapper {
            getUsername().equals("Manideep223")){
             var removeUser = userRepository.findById(input.userId()).get();
             var currentSize = group.get().getTotalUploadedSize();
-            var posts = postRepository.getAllGroupPosts(group.get().getId());
+            var posts = postRepository.getAllGroupPosts(group.get().getId()).stream()
+                    .filter(x-> x.getCreator().getUsername().equals(removeUser.getUsername())).toList();
             var removeSize = posts.stream()
-                    .filter(x-> x.getCreator().getUsername().equals(removeUser.getUsername()))
                     .map(x->x.getFileSize()).reduce(0L, (a, b) -> a + b);
             postRepository.deleteAll(posts);
             var userCurrentSize = removeUser.getTotalUploadedSize();
